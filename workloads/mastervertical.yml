@@ -11,6 +11,8 @@
     - vars/mastervertical.yml
   vars:
     workload_job: "mastervertical"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_file }}"
   tasks:
     - name: Create scale-ci-tooling directory
       file:

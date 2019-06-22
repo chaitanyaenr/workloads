@@ -9,6 +9,8 @@
   remote_user: "{{orchestration_user}}"
   vars_files:
     - vars/tooling.yml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_file }}"
   tasks:
     - name: Create scale-ci-tooling directory
       file:

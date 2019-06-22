@@ -11,6 +11,8 @@
     - vars/baseline.yml
   vars:
     workload_job: "baseline"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_file }}"
   tasks:
     - name: Create scale-ci-tooling directory
       file:
