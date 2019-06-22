@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -eo pipefail
+
+# vars
+scale_ci_namespace="scale-ci-tooling"
+cleanup=$1
+logs_counter=0
+logs_counter_limit=500
+wait_time=25
+
+echo "----------------------------------------------------------------------------------------"
+echo "           RUNNING SCALE-CI-LOGGER TO TRACK THE WORKLOAD AND STREAM POD LOGS            "
+echo "----------------------------------------------------------------------------------------"
+
+# help
+function help() {
+	printf "\n"
+        printf "Usage: export KUBECONFIG=<path-to-kubeconfig?; $0 [options]\n"
+	printf "\n"
+	printf "Options supported:\n"
+	printf "\t cleanup=str,              str=true or false, cleans up the scale-ci-tooling project if set to true\n"
+}
+
+if [[ "$#" -ne 1 ]]; then
+	help
+	exit 1
+fi
+
+# cleanup
+function cleanup () {
+	echo "CLEANING UP"
+	oc delete project $scale_ci_namespace	
+}
+
+echo "sleeping for 10sec before streaming the workload pod logs"
+sleep 10
+
+# get scale-ci-workload pod
+scale_ci_workload_pod=$(oc get pods -n $scale_ci_namespace | grep "scale-ci" | grep -w "Running" | awk '{print $1}')
+
+# logging
+oc logs -f pod/$scale_ci_workload_pod -n $scale_ci_namespace
+while true; do
+        logs_counter=$((logs_counter+1))
+        if [[ $(oc --namespace=default get pods $scale_ci_workload_pod -n $scale_ci_namespace -o json | jq -r ".status.phase") == "Running" ]]; then
+                if [[ $logs_counter -le $logs_counter_limit ]]; then
+			echo "=================================================================================================================================================================="
+			echo "Attempt $logs_counter to reconnect and fetch the scale-ci-workload pod logs"
+			echo "=================================================================================================================================================================="
+			echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+			echo "------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+			oc logs -f $scale_ci_workload_pod -n $scale_ci_namespace
+                else
+                        echo "Exceeded the retry limit trying to get the controller logs: $logs_counter_limit, exiting."
+                        exit 1
+                fi
+        else
+                echo "JOB COMPLETED"
+                break
+        fi
+done
+
+# check the status of the scale-ci-workload pod
+while [[ $(oc --namespace=default get pods $scale_ci_workload_pod -n $scale_ci_namespace -o json | jq -r ".status.phase") != "Succeeded" ]]; do
+	if [[ $(oc --namespace=default get pods $scale_ci_workload_pod -n $scale_ci_namespace -o json | jq -r ".status.phase") == "Failed" ]]; then
+   		echo "RESULT: JOB FAILED"
+		if [[ "$cleanup" == "true" ]]; then
+   			cleanup
+		fi
+   		exit 1
+   	else        
+    		sleep $wait_time
+        fi
+done
+echo "JOB SUCCEEDED"
+if [[ "$cleanup" == "true" ]]; then
+	cleanup
+fi

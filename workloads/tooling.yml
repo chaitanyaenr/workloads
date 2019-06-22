@@ -71,7 +71,7 @@
 
     - name: Delete scale-ci-tooling namespace
       shell: |
-        oc delete project --wait scale-ci-tooling
+        oc delete project scale-ci-tooling
       when: scale_ci_tooling_ns_exists.rc == 0
 
     - name: Wait until scale-ci-tooling project is deleted
