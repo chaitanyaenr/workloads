@@ -1,16 +1,16 @@
 ---
 #
-# Runs deployments-per-ns cluster limits test on an existing RHCOS cluster
+# Runs Namespaces per cluster limits test on an existing RHCOS cluster
 #
 
-- name: Runs deployments-per-ns cluster limits test on a RHCOS cluster
+- name: Runs Namespaces per cluster on a RHCOS cluster
   hosts: orchestration
   gather_facts: true
   remote_user: "{{orchestration_user}}"
   vars_files:
-    - vars/deployments-per-ns.yml
+    - vars/namespaces-per-cluster.yml
   vars:
-    workload_job: "deployments-per-ns"
+    workload_job: "namespaces-per-cluster"
   tasks:
     - name: Create scale-ci-tooling directory
       file:
@@ -53,8 +53,8 @@
           dest: "{{ansible_user_dir}}/scale-ci-tooling/kubeconfig-secret.yml"
         - src: workload-job.yml.j2
           dest: "{{ansible_user_dir}}/scale-ci-tooling/workload-job.yml"
-        - src: workload-deployments-per-ns-script-cm.yml.j2
-          dest: "{{ansible_user_dir}}/scale-ci-tooling/workload-deployments-per-ns-script-cm.yml"
+        - src: workload-namespaces-per-cluster-script-cm.yml.j2
+          dest: "{{ansible_user_dir}}/scale-ci-tooling/workload-namespaces-per-cluster-script-cm.yml"
 
     - name: Check if scale-ci-tooling namespace exists
       shell: |
@@ -63,9 +63,9 @@
       changed_when: false
       register: scale_ci_tooling_ns_exists
 
-    - name: Ensure any stale scale-ci-deployments-per-namespace job is deleted
+    - name: Ensure any stale scale-ci-namespaces-per-cluster job is deleted
       shell: |
-        oc delete job scale-ci-deployments-per-ns -n scale-ci-tooling
+        oc delete job scale-ci-namespaces-per-cluster -n scale-ci-tooling
       register: scale_ci_tooling_project
       failed_when: scale_ci_tooling_project.rc == 0
       until: scale_ci_tooling_project.rc == 1
@@ -100,7 +100,7 @@
 
     - name: Create/replace workload script configmap
       shell: |
-        oc replace --force -n scale-ci-tooling -f "{{ansible_user_dir}}/scale-ci-tooling/workload-deployments-per-ns-script-cm.yml"
+        oc replace --force -n scale-ci-tooling -f "{{ansible_user_dir}}/scale-ci-tooling/workload-namespaces-per-cluster-script-cm.yml"
 
     - name: Create/replace workload job to that runs workload script
       shell: |
@@ -108,7 +108,7 @@
 
     - name: Poll until job pod is running
       shell: |
-        oc get pods --selector=job-name=scale-ci-deployments-per-ns -n scale-ci-tooling -o json
+        oc get pods --selector=job-name=scale-ci-namespaces-per-cluster -n scale-ci-tooling -o json
       register: pod_json
       retries: 60
       delay: 2
@@ -116,7 +116,7 @@
 
     - name: Poll until job is complete
       shell: |
-        oc get job scale-ci-deployments-per-ns -n scale-ci-tooling -o json
+        oc get job scale-ci-namespaces-per-cluster -n scale-ci-tooling -o json
       register: job_json
       retries: "{{job_completion_poll_attempts}}"
       delay: 10
