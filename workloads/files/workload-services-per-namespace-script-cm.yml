@@ -98,6 +98,7 @@ data:
       projects:
         - num: ${SERVICES_PER_NAMESPACE_PROJECTS}
           basename: ${SERVICES_PER_NAMESPACE_BASENAME}
+          nodeselector: "node-role.kubernetes.io/worker="
           ifexists: delete
           templates:
             - num: ${SERVICES_PER_NAMESPACE_COUNT}

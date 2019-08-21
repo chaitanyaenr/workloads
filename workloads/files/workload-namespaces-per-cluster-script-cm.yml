@@ -80,8 +80,9 @@ data:
       result_dir=${benchmark_results_dir}
     fi
     start_time=$(date +%s)
-    VIPERCONFIG=/tmp/namespaces_per_cluster.yaml openshift-tests run-test "[Feature:Performance][Serial][Slow] Load cluster should load the cluster [Suite:openshift]" | tee "${result_dir}/clusterloader.txt"
+    VIPERCONFIG=/tmp/namespaces_per_cluster.yaml openshift-tests run-test "[Feature:Performance][Serial][Slow] Load cluster concurrently with templates [Suite:openshift]" | tee "${result_dir}/clusterloader.txt"
     exit_code=$?
+    sleep 15m
     end_time=$(date +%s)
     duration=$((end_time-start_time))
 
@@ -98,6 +99,7 @@ data:
       projects:
         - num: ${NAMESPACES_PER_CLUSTER_COUNT}
           basename: ${NAMESPACES_PER_CLUSTER_BASENAME}
+          nodeselector: "node-role.kubernetes.io/worker="
           ifexists: reuse
           templates:
             - num: 1
@@ -110,8 +112,8 @@ data:
               file: /root/workload/ssh-secret-template.yaml
   bc-imagestream-template.yaml: |
     ---
-    Kind: Template
-    apiVersion: v1
+    kind: Template
+    apiVersion: template.openshift.io/v1
     metadata:
       name: imagestreamTemplate
       creationTimestamp:
@@ -143,8 +145,8 @@ data:
       template: imagestreamTemplate
   deployment-config-ns-per-cluster-template.yaml: |
     ---
-    Kind: Template
-    apiVersion: v1
+    kind: Template
+    apiVersion: template.openshift.io/v1
     metadata:
       name: deploymentConfigTemplate
       creationTimestamp:
@@ -228,8 +230,8 @@ data:
       template: deploymentConfigTemplate
   ssh-secret-template.yaml: |
    ---
-    Kind: Template
-    apiVersion: v1
+    kind: Template
+    apiVersion: template.openshift.io/v1
     metadata:
       name: sshSecretTemplate
       creationTimestamp: 

@@ -38,7 +38,7 @@ data:
 
     # Start of Test Code
     echo "$(date -u) Running Deployments per ns cluster limits test"
-    pbench-user-benchmark -- 'VIPERCONFIG=/root/workload/cluster-limits-deployments-per-namespace.yaml openshift-tests run-test "[Feature:Performance][Serial][Slow] Load cluster should load the cluster [Suite:openshift]"'
+    pbench-user-benchmark -- 'VIPERCONFIG=/root/workload/cluster-limits-deployments-per-namespace.yaml openshift-tests run-test "[Feature:Performance][Serial][Slow] Load cluster concurrently with templates [Suite:openshift]" | tee "${result_dir}/clusterloader.txt"'
     pbench-copy-results --prefix {{deployments_per_ns_test_prefix}}
     echo "$(date -u) Completed running Deployments per ns cluster limits test"
     # End of Test Code
@@ -51,6 +51,7 @@ data:
         - num: 1
           basename: {{deployments_per_ns_basename}}
           ifexists: delete
+          nodeselector: "node-role.kubernetes.io/worker="
           templates:
             - num: {{deployments_per_ns_count}}
               file: deployment-config-cluster-limits-deployments.yaml
@@ -59,8 +60,8 @@ data:
                 - IMAGE: {{deployments_per_ns_pod_image}}
   deployment-config-cluster-limits-deployments.yaml: |
     ---
-    Kind: Template
-    apiVersion: v1
+    kind: Template
+    apiVersion: template.openshift.io/v1
     metadata:
       name: deploymentConfigTemplate
       creationTimestamp:

@@ -82,6 +82,7 @@ data:
     start_time=$(date +%s)
     VIPERCONFIG=/tmp/mastervertical.yaml openshift-tests run-test "[Feature:Performance][Serial][Slow] Load cluster concurrently with templates [Suite:openshift]" | tee "${result_dir}/clusterloader.txt"
     exit_code=$?
+    sleep 15m
     end_time=$(date +%s)
     duration=$((end_time-start_time))
 
@@ -98,7 +99,8 @@ data:
       projects:
         - num: ${MASTERVERTICAL_PROJECTS}
           basename: ${MASTERVERTICAL_BASENAME}
-          ifexists: delete
+          nodeselector: "node-role.kubernetes.io/worker="
+          ifexists: reuse
           templates:
             - num: 3
               file: /root/workload/build-config-template.yaml
