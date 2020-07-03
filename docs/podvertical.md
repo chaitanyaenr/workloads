@@ -139,6 +139,11 @@ Period of time (in seconds) for cluster loader to pause after creating pods and 
 Default: `600`  
 Period of time (in seconds) that cluster loader will wait for pods to come up to "Running" state per tuningset before sleeping `PODVERTICAL_PAUSE`. The tuningset is determined by `PODVERTICAL_STEPSIZE` and `PODVERTICAL_PAUSE` thus if you have a very large stepsize you will need a greater period of time to allow the Pods to come to "Running" state. This value prevents waiting infinitely for Pods that would otherwise never come up.
 
+### PPROF_COLLECT
+Default: `false`
+If you'd like to enable pprof profile data collection of kubeapiserver and prometheus through conprof(https://github.com/conprof/conprof).
+Enabling this will create a few services to collect profiles from the apiserver pods and then create a conprof tarball in the pbench tarball
+
 ### EXPECTED_PODVERTICAL_DURATION
 Default: `600`  
 Pass/fail criteria. Value to determine if PodVertical workload executed in duration expected.
